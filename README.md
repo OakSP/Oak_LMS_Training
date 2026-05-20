@@ -16,6 +16,8 @@
 | **ใบประกาศ** | ออกใบประกาศนียบัตรอัตโนมัติเมื่อเรียนจบ |
 | **ชำระเงิน** | Stripe Checkout + ดูประวัติการชำระ |
 | **Dashboard** | นักเรียน / ผู้สอน / Admin แยกสิทธิ์ชัดเจน |
+| **Chatbot โอ๊คกี้** | ผู้ช่วย AI ลอยด้านล่างขวา ตอบคำถามคอร์สและข้อมูล On-site |
+| **เรียน On-site** | ห้องเรียนจริงที่ PIM (สถาบันการจัดการปัญญาภิวัฒน์) นนทบุรี |
 | **Dark mode** | สลับธีม Light / Dark |
 | **Bilingual** | ภาษาไทย / English ในหน้า UI |
 
@@ -132,6 +134,7 @@ lms-platform/
 │   ├── certificate/     # CertificateCard, CertificatePreview
 │   ├── dashboard/       # StatCard, Charts
 │   ├── payment/         # CheckoutButton, PaymentHistory
+│   ├── chatbot/         # ChatbotWidget (โอ๊คกี้), ChatbotAvatar (SVG)
 │   └── shared/          # Icon, Rating, LoadingSkeleton
 ├── lib/
 │   ├── auth/            # NextAuth config + RBAC helpers
@@ -170,9 +173,29 @@ npx prisma db seed   # seed ข้อมูลตัวอย่าง
 
 ---
 
+## เรียน On-site ที่ PIM
+
+นอกจากเรียนออนไลน์ ยังมีคลาสเรียนแบบ On-site ที่:
+
+**สถาบันการจัดการปัญญาภิวัฒน์ (PIM)**
+85/1 หมู่ 2 ถนนแจ้งวัฒนะ ต.บางตลาด อ.ปากเกร็ด จ.นนทบุรี 11120
+
+| | รายละเอียด |
+|---|---|
+| 🚇 MRT | สายสีชมพู — สถานี PIM |
+| 🗓️ จ–ศ | 09:00 – 18:00 น. |
+| 🗓️ ส–อา | 09:00 – 16:00 น. |
+| 📞 โทร | 02-855-0140 ต่อ 3333 |
+| 📧 Email | lms@pim.ac.th |
+
+> ถามข้อมูลเพิ่มเติมได้จาก **โอ๊คกี้** chatbot มุมขวาล่างของเว็บ 💬
+
+---
+
 ## Roadmap
 
 - [x] **Phase 1** — MVP: Auth, Courses, Lessons, Quiz, Certificates, Payments, Dashboard
+- [x] **Chatbot** — โอ๊คกี้ AI assistant + ข้อมูล On-site PIM (เพิ่มหลัง Phase 1)
 - [ ] **Phase 2** — Analytics, ฟอรัม, Notifications, Subscriptions
 - [ ] **Phase 3** — Mobile app, AI recommendations, Multi-tenant
 
