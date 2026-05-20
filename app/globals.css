@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/* ── Tailwind v4 theme — generates utility classes ─────────────────────── */
+@theme {
+  --font-sans: "IBM Plex Sans", "IBM Plex Sans Thai", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "IBM Plex Serif", ui-serif, serif;
+
+  /* Oak brand colours */
+  --color-ink:      #0A1530;
+  --color-ink-2:    #1B2A4E;
+  --color-muted:    #4A5773;
+  --color-muted-2:  #7B8699;
+  --color-line:     #E4E7EE;
+  --color-line-2:   #EFF1F6;
+  --color-bg-warm:  #FAFAF7;
+  --color-bg-surf:  #F4F4EF;
+  --color-card:     #FFFFFF;
+  --color-primary:  #0B1F3D;
+  --color-primary-2:#1A3461;
+  --color-accent:   #B8763A;
+  --color-accent-2: #D89B5E;
+  --color-success:  #2F7D5A;
+  --color-danger:   #B23A48;
+
+  /* Language colours */
+  --color-lang-en: #3A5EB8;
+  --color-lang-zh: #B23A48;
+  --color-lang-ja: #7A4FB8;
+
+  /* Border radius */
+  --radius-sm: 8px;
+  --radius:    14px;
+  --radius-lg: 18px;
+}
+
+/* ── CSS custom properties — used with var() in inline styles ───────────── */
+:root {
+  --ink:       #0A1530;
+  --ink-2:     #1B2A4E;
+  --muted:     #4A5773;
+  --muted-2:   #7B8699;
+  --line:      #E4E7EE;
+  --line-2:    #EFF1F6;
+  --bg:        #FAFAF7;
+  --bg-2:      #F4F4EF;
+  --card:      #FFFFFF;
+  --primary:   #0B1F3D;
+  --primary-2: #1A3461;
+  --accent:    #B8763A;
+  --accent-2:  #D89B5E;
+  --success:   #2F7D5A;
+  --danger:    #B23A48;
+  --en:        #3A5EB8;
+  --zh:        #B23A48;
+  --jp:        #7A4FB8;
+
+  --shadow-sm: 0 1px 0 rgba(11,31,61,.04), 0 2px 8px rgba(11,31,61,.04);
+  --shadow-md: 0 1px 0 rgba(11,31,61,.06), 0 12px 32px rgba(11,31,61,.08);
+  --shadow-lg: 0 30px 80px rgba(11,31,61,.18), 0 6px 20px rgba(11,31,61,.08);
+}
+
+html[data-theme="dark"] {
+  --ink:    #F2F4F8;
+  --ink-2:  #C8D0E0;
+  --muted:  #9AAAC0;
+  --bg:     #0A1124;
+  --bg-2:   #0E1730;
+  --card:   #121C36;
+  --line:   #243049;
+  --accent: #E0A968;
+}
+
+/* ── Base styles ────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: optimizeLegibility;
+  transition: background .25s ease, color .25s ease;
+}
+
+/* ── Keyframe animations ────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .55; }
+}
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Animation utility classes ──────────────────────────────────────────── */
+.animate-fade-up  { animation: fadeUp  .7s both; }
+.animate-fade-in  { animation: fadeIn  .5s both; }
+.animate-scale-in { animation: scaleIn .3s cubic-bezier(.2,.7,.2,1) both; }
+.animate-pulse-dot { animation: pulse 1.6s infinite; }
+
+/* ── Hover lift (cards) ─────────────────────────────────────────────────── */
+.lift {
+  transition: transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s ease;
+}
+.lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Container ──────────────────────────────────────────────────────────── */
+.wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+@media (max-width: 720px) {
+  .wrap { padding: 0 18px; }
+}
+
+/* ── Serif accent ───────────────────────────────────────────────────────── */
+.serif {
+  font-family: "IBM Plex Serif", ui-serif, serif;
+}
+
+/* ── Scrollbar (webkit) ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-2); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }

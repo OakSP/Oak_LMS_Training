@@ -1,0 +1,266 @@
+// This is your Prisma schema file for Oak LMS
+// Datasource: Neon PostgreSQL (serverless)
+// Adapter: @auth/prisma-adapter for NextAuth v5
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  super_admin
+  admin
+  instructor
+  student
+  manager
+}
+
+enum LessonType {
+  video
+  pdf
+  text
+  quiz
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  refunded
+  failed
+}
+
+enum QuestionType {
+  multiple_choice
+  true_false
+}
+
+// ─── NextAuth v5 required models ──────────────────────────────────────────────
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── Core models ──────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String
+  passwordHash  String?
+  role          Role      @default(student)
+  avatarUrl     String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  // App relations
+  courses        Course[]       @relation("InstructorCourses")
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  quizAttempts   QuizAttempt[]
+  certificates   Certificate[]
+  payments       Payment[]
+
+  @@map("users")
+}
+
+model Category {
+  id   String @id @default(cuid())
+  slug String @unique
+  name String
+
+  courses Course[]
+
+  @@map("categories")
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  coverUrl     String?
+  lang         String   @default("en")
+  price        Decimal  @default(0) @db.Decimal(10, 2)
+  isFree       Boolean  @default(false)
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  instructorId String
+  instructor   User     @relation("InstructorCourses", fields: [instructorId], references: [id])
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  lessons      Lesson[]
+  enrollments  Enrollment[]
+  certificates Certificate[]
+  payments     Payment[]
+
+  @@map("courses")
+}
+
+model Lesson {
+  id          String     @id @default(cuid())
+  title       String
+  type        LessonType @default(video)
+  contentUrl  String?
+  durationSec Int?
+  position    Int        @default(0)
+  isFree      Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  progress LessonProgress[]
+  quizzes  Quiz[]
+
+  @@map("lessons")
+}
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  isCompleted Boolean   @default(false)
+  watchTime   Int       @default(0)
+  completedAt DateTime?
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+model Quiz {
+  id          String  @id @default(cuid())
+  title       String
+  passPercent Int     @default(70)
+  timeLimitSec Int?
+  maxAttempts Int     @default(3)
+
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id           String       @id @default(cuid())
+  type         QuestionType @default(multiple_choice)
+  text         String
+  options      String[]
+  correctIndex Int
+
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          String    @id @default(cuid())
+  score       Decimal   @db.Decimal(5, 2)
+  isPassed    Boolean
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("quiz_attempts")
+}
+
+model Certificate {
+  id         String   @id @default(cuid())
+  certNumber String   @unique
+  issuedAt   DateTime @default(now())
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("certificates")
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  amount    Decimal       @db.Decimal(10, 2)
+  currency  String        @default("THB")
+  status    PaymentStatus @default(pending)
+  stripeId  String?
+  createdAt DateTime      @default(now())
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+
+  @@map("payments")
+}
