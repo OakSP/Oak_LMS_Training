@@ -31,7 +31,7 @@ export async function GET() {
   });
 
   return NextResponse.json({
-    data: payments.map((p) => ({
+    data: (payments as { id: string; course: { title: string }; amount: unknown; currency: string; status: string; createdAt: Date }[]).map((p) => ({
       id: p.id,
       courseTitle: p.course.title,
       amount: Number(p.amount),

@@ -48,7 +48,8 @@ export async function GET() {
     completedByCoureId[cid] = (completedByCoureId[cid] ?? 0) + 1;
   }
 
-  const data = enrollments.map((en) => {
+  type EnrollmentRow = { courseId: string; enrolledAt: Date; completedAt: Date | null; course: { title: string; lessons: { id: string }[] } };
+  const data = (enrollments as EnrollmentRow[]).map((en) => {
     const totalLessons = en.course.lessons.length;
     const completedLessons = completedByCoureId[en.courseId] ?? 0;
     const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;

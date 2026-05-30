@@ -23,7 +23,7 @@ export default async function InstructorCoursesPage() {
         orderBy: { createdAt: "desc" },
         include: { _count: { select: { enrollments: true } } },
       });
-      courses = dbCourses.map((c) => ({
+      courses = (dbCourses as { id: string; title: string; lang: string; isPublished: boolean; price: unknown; _count: { enrollments: number } }[]).map((c) => ({
         id: c.id,
         title: c.title,
         lang: c.lang,

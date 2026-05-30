@@ -60,7 +60,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ qui
             submittedAt: latestAttempt.submittedAt?.toISOString() ?? null,
           }
         : null,
-      attempts: attempts.map((a) => ({
+      attempts: (attempts as { id: string; score: unknown; isPassed: boolean; startedAt: Date; submittedAt: Date | null }[]).map((a) => ({
         ...a,
         score: Number(a.score),
         startedAt: a.startedAt.toISOString(),

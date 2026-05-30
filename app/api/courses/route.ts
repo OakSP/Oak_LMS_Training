@@ -34,7 +34,8 @@ export async function GET(request: Request) {
       },
     });
 
-    const normalized = dbCourses
+    type DbCourseRow = { id: string; title: string; description: string | null; lang: string; price: unknown; isFree: boolean; isPublished: boolean; coverUrl: string | null; instructor: { name: string }; _count: { enrollments: number; lessons: number } };
+    const normalized = (dbCourses as DbCourseRow[])
       .filter((c) => !q || c.title.toLowerCase().includes(q) || c.instructor.name.toLowerCase().includes(q))
       .map((c) => ({
         id: c.id,
