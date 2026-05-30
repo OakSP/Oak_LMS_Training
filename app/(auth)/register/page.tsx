@@ -29,13 +29,25 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
-      const data = await res.json();
+      const data = await res.json() as { error?: string; mode?: string };
       if (!res.ok) {
         setError(data.error ?? "เกิดข้อผิดพลาด");
         return;
       }
-      // auto-login after registration
-      await signIn("credentials", { email, password, callbackUrl: "/dashboard/student" });
+
+      if (data.mode === "local-demo") {
+        // Demo mode: DB ไม่พร้อม — ไม่สามารถ persist ได้, แจ้ง user และ redirect login
+        window.location.href = "/login?notice=registered-demo";
+        return;
+      }
+
+      // DB mode: auto-login หลังสมัคร
+      const result = await signIn("credentials", { email, password, redirect: false });
+      if (result?.error) {
+        window.location.href = "/login?notice=registered";
+      } else {
+        window.location.href = "/dashboard/student";
+      }
     } catch {
       setError("ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่");
     } finally {

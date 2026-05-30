@@ -6,7 +6,6 @@ import { getCourseProgress, getEnrolledCourseIds, getStoredQuizAttempts } from "
 import { Icon } from "@/components/shared/icon";
 
 export default function StudentDashboard() {
-  const defaultEnrolled = useMemo(() => COURSES.slice(0, 3).map((course) => course.id), []);
   const [version, setVersion] = useState(0);
   const [mounted, setMounted] = useState(false);
 
@@ -23,7 +22,8 @@ export default function StudentDashboard() {
     };
   }, []);
 
-  const enrolledIds = mounted ? getEnrolledCourseIds(defaultEnrolled) : defaultEnrolled;
+  // Only show courses the student has actually enrolled in — no default
+  const enrolledIds = mounted ? getEnrolledCourseIds([]) : [];
   const enrolled = COURSES.filter((course) => enrolledIds.includes(course.id));
   const attempts = mounted ? getStoredQuizAttempts() : [];
   void version;
@@ -90,6 +90,30 @@ export default function StudentDashboard() {
       <h2 style={{ margin: "0 0 20px", fontSize: 18, fontWeight: 600, color: "var(--ink)" }}>
         คอร์สที่กำลังเรียน
       </h2>
+
+      {mounted && summaries.length === 0 && (
+        <div style={{
+          background: "var(--card)", border: "1px dashed var(--line)",
+          borderRadius: 16, padding: "48px 32px", textAlign: "center",
+        }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>📚</div>
+          <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>
+            ยังไม่ได้ลงทะเบียนคอร์สใดเลย
+          </h3>
+          <p style={{ margin: "0 0 20px", fontSize: 14, color: "var(--muted)" }}>
+            เลือกคอร์สที่สนใจแล้วกด "เรียนฟรีเลย" หรือ "ซื้อคอร์ส" เพื่อเริ่มเรียน
+          </p>
+          <a href="/courses" style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "10px 20px", borderRadius: 10,
+            background: "var(--primary)", color: "#fff",
+            fontWeight: 600, fontSize: 14, textDecoration: "none",
+          }}>
+            ดูคอร์สทั้งหมด →
+          </a>
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {summaries.map(({ course, progress, quiz }) => {
           const percent = progress.percent;

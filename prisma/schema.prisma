@@ -25,6 +25,7 @@ enum LessonType {
   pdf
   text
   quiz
+  youtube
 }
 
 enum PaymentStatus {

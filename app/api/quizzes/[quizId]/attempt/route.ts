@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiRequireAuth } from "@/lib/auth/helpers";
 import { getQuizById } from "@/mock/learning";
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -12,14 +13,53 @@ function shuffleArray<T>(arr: T[]): T[] {
 
 export async function POST(request: Request, { params }: { params: Promise<{ quizId: string }> }) {
   const { quizId } = await params;
-  const quiz = getQuizById(quizId);
+  const body = await request.json().catch(() => ({})) as { randomize?: boolean };
+  const randomize = body.randomize !== false;
 
-  if (!quiz) {
-    return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+  const hasDatabase = Boolean(process.env.DATABASE_URL);
+
+  if (!hasDatabase) {
+    const quiz = getQuizById(quizId);
+    if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+
+    const questions = randomize ? shuffleArray(quiz.questions) : quiz.questions;
+    return NextResponse.json({
+      data: {
+        id: `attempt-${Date.now()}`,
+        quizId,
+        startedAt: new Date().toISOString(),
+        maxAttempts: quiz.maxAttempts,
+        questions,
+        mode: "local-demo",
+      },
+    }, { status: 201 });
   }
 
-  const body = await request.json().catch(() => ({})) as { randomize?: boolean };
-  const randomize = body.randomize !== false; // default true
+  // DB mode — require auth + enforce attempt limit
+  const { user, error } = await apiRequireAuth();
+  if (error) return error;
+
+  const { prisma } = await import("@/lib/db/prisma");
+
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: { questions: true },
+  });
+  if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+
+  // Count how many times this user has already submitted this quiz
+  const attemptCount = await prisma.quizAttempt.count({
+    where: { quizId, userId: user!.id },
+  });
+
+  if (attemptCount >= quiz.maxAttempts) {
+    return NextResponse.json({
+      error: `ถึงจำนวนครั้งสูงสุดแล้ว (${quiz.maxAttempts} ครั้ง) — ไม่สามารถทำ Quiz นี้ได้อีก`,
+      code: "MAX_ATTEMPTS_REACHED",
+      attemptsUsed: attemptCount,
+      maxAttempts: quiz.maxAttempts,
+    }, { status: 403 });
+  }
 
   const questions = randomize ? shuffleArray(quiz.questions) : quiz.questions;
 
@@ -28,9 +68,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ qui
       id: `attempt-${Date.now()}`,
       quizId,
       startedAt: new Date().toISOString(),
+      attemptsUsed: attemptCount,
+      attemptsRemaining: quiz.maxAttempts - attemptCount,
       maxAttempts: quiz.maxAttempts,
       questions,
-      mode: "local-demo",
     },
   }, { status: 201 });
 }

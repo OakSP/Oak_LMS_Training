@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/shared/icon";
-import { ROLE_HOME } from "@/lib/auth/constants";
+import { ROLE_HOME, DEMO_PASSWORD } from "@/lib/auth/constants";
 
 const DEMO_ACCOUNTS = [
   { email: "student@oak.local",    role: "Student",    icon: "🎓", home: ROLE_HOME.student },
@@ -18,6 +18,10 @@ export default function LoginPage() {
   const [callbackUrl] = useState(() => {
     if (typeof window === "undefined") return "";
     return new URLSearchParams(window.location.search).get("callbackUrl") ?? "";
+  });
+  const [notice] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("notice") ?? "";
   });
 
   const [email, setEmail]       = useState("");
@@ -71,10 +75,25 @@ export default function LoginPage() {
     await signIn("google", { callbackUrl: home });
   }
 
-  function quickLogin(account: typeof DEMO_ACCOUNTS[0]) {
-    setEmail(account.email);
-    setPassword("demo1234");
+  async function quickLogin(account: typeof DEMO_ACCOUNTS[0]) {
     setShowDemo(false);
+    setError("");
+    setLoading(true);
+    try {
+      const res = await signIn("credentials", {
+        email: account.email,
+        password: DEMO_PASSWORD,
+        redirect: false,
+      });
+      if (res?.error) {
+        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      } else {
+        router.push(account.home);
+        router.refresh();
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -89,6 +108,17 @@ export default function LoginPage() {
       <p style={{ margin: "0 0 24px", fontSize: 14, color: "var(--muted)" }}>
         ยินดีต้อนรับกลับสู่ Oak LMS
       </p>
+
+      {notice === "registered" && (
+        <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(34,197,94,.08)", border: "1px solid rgba(34,197,94,.2)", color: "var(--success)", fontSize: 13.5, marginBottom: 16 }}>
+          ✅ สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบด้วย email และรหัสผ่านที่ตั้งไว้
+        </div>
+      )}
+      {notice === "registered-demo" && (
+        <div style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(184,118,58,.08)", border: "1px solid rgba(184,118,58,.3)", color: "var(--accent)", fontSize: 13.5, marginBottom: 16 }}>
+          ✅ สมัครสมาชิกสำเร็จ (Demo Mode) — กรุณาใช้ Demo Account ด้านล่างเพื่อทดสอบระบบ
+        </div>
+      )}
 
       {/* Google login */}
       <button onClick={handleGoogle} style={{
@@ -203,7 +233,7 @@ export default function LoginPage() {
                     {acc.email}
                   </p>
                 </div>
-                <span style={{ fontSize: 11, color: "var(--muted-2)" }}>Fill →</span>
+                <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600 }}>เข้าสู่ระบบ →</span>
               </button>
             ))}
           </div>

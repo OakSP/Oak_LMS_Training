@@ -1,6 +1,6 @@
 import type { BilingualText } from "./i18n";
 
-export type LessonContentType = "video" | "pdf" | "text" | "quiz";
+export type LessonContentType = "video" | "pdf" | "text" | "quiz" | "youtube";
 
 export interface LessonResource {
   id: string;

@@ -7,6 +7,7 @@ import { LessonProgressBar } from "@/components/lesson/lesson-progress-bar";
 import { LessonSidebar } from "@/components/lesson/lesson-sidebar";
 import { VideoPlayer } from "@/components/lesson/video-player";
 import { PdfViewer } from "@/components/lesson/pdf-viewer";
+import { YouTubePlayer } from "@/components/lesson/youtube-player";
 import { useCourseProgress } from "@/hooks/use-course-progress";
 import type { Course } from "@/types/course";
 import type { LearningLesson } from "@/types/learning";
@@ -63,10 +64,22 @@ export function LessonPlayerClient({
     [lesson, save],
   );
 
-  const completeLesson = useCallback(() => {
+  const completeLesson = useCallback(async () => {
     enroll();
-    void complete(lesson);
-  }, [complete, enroll, lesson]);
+    await complete(lesson);
+
+    // Check if this was the last lesson — if so, auto-issue certificate
+    const completedAfter = lessons.filter(
+      (item) => item.id === lesson.id || progress[`${course.id}:${item.id}`]?.isCompleted
+    ).length;
+    if (completedAfter >= lessons.length) {
+      fetch("/api/certificates/issue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId: course.id }),
+      }).catch(() => null);
+    }
+  }, [complete, course.id, enroll, lesson, lessons, progress]);
 
   const quizId = quizIdsByLessonId[lesson.id];
 
@@ -116,6 +129,7 @@ export function LessonPlayerClient({
             />
           )}
 
+          {lesson.type === "youtube" && <YouTubePlayer lesson={lesson} />}
           {lesson.type === "pdf" && <PdfViewer lesson={lesson} />}
           {lesson.type === "text" && <TextLesson lesson={lesson} />}
 

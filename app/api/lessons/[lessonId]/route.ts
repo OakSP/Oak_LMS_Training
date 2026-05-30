@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const updateLessonSchema = z.object({
   title: z.string().min(3).max(120).optional(),
-  type: z.enum(["video", "pdf", "text", "quiz"]).optional(),
+  type: z.enum(["video", "pdf", "text", "quiz", "youtube"]).optional(),
   contentUrl: z.string().url().optional().nullable(),
   durationSec: z.coerce.number().min(0).optional().nullable(),
   isFree: z.boolean().optional(),
@@ -50,7 +50,8 @@ export async function PATCH(
 
     const updated = await prisma.lesson.update({
       where: { id: lessonId },
-      data: parsed.data,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: parsed.data as any,
     });
 
     return NextResponse.json({ data: updated });

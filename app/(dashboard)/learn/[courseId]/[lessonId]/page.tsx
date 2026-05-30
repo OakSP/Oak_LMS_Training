@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import { requireUser } from "@/lib/auth/helpers";
 import { LessonPlayerClient } from "@/components/lesson/lesson-player-client";
 import { getAdjacentLessons, getCourseById, getCourseLessons, getLessonById, getQuizForLesson } from "@/mock/learning";
 
 export default async function LearnLessonPage({ params }: { params: Promise<{ courseId: string; lessonId: string }> }) {
+  await requireUser();
   const { courseId, lessonId } = await params;
   const course = getCourseById(courseId);
   const lesson = getLessonById(courseId, lessonId);

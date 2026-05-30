@@ -8,6 +8,7 @@ import { LANG_META } from "@/mock/lang-meta";
 import { CourseThumb } from "@/components/course/course-thumbnail";
 import { Rating } from "@/components/shared/rating";
 import { Icon } from "@/components/shared/icon";
+import { EnrollButton } from "@/components/course/enroll-button";
 
 export default function CourseDetailPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = use(params);
@@ -111,20 +112,13 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
                 </span>
               )}
 
-              <Link href={`/learn/${course.id}/lesson-1`} style={{
-                display: "block", padding: "14px 0", textAlign: "center",
-                background: "var(--primary)", color: "#fff", borderRadius: 12,
-                fontWeight: 600, fontSize: 15, textDecoration: "none", marginBottom: 10,
-              }}>
-                {t("buy_now")}
-              </Link>
-              <button style={{
-                width: "100%", padding: "14px 0", borderRadius: 12,
-                border: "1px solid var(--line)", background: "transparent",
-                color: "var(--ink)", fontWeight: 600, fontSize: 15, cursor: "pointer", marginBottom: 20,
-              }}>
-                {t("add_cart")}
-              </button>
+              <EnrollButton
+                courseId={course.id}
+                firstLessonId="lesson-1"
+                price={course.price}
+                isFree={course.price === 0}
+                label={course.price === 0 ? t("buy_now") : `${t("buy_now")} ฿${course.price.toLocaleString()}`}
+              />
 
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
                 {[

@@ -46,7 +46,14 @@ export default function NewCoursePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error?.message ?? data.error ?? "Failed to create course");
+        if (typeof data.error === "string") {
+          setError(data.error);
+        } else if (data.error?.fieldErrors) {
+          const msgs = Object.values(data.error.fieldErrors as Record<string, string[]>).flat();
+          setError(msgs[0] ?? "Validation failed");
+        } else {
+          setError("Failed to create course");
+        }
         return;
       }
 

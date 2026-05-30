@@ -1,17 +1,42 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/helpers";
 
+const DEMO_COURSES = [
+  { id: "demo-1", title: "English for Beginners", lang: "en", isPublished: true, enrolled: 124, price: 0 },
+  { id: "demo-2", title: "Business English Intensive", lang: "en", isPublished: false, enrolled: 0, price: 1490 },
+];
+
 export default async function InstructorCoursesPage() {
-  await requireRole(["instructor", "admin", "super_admin"]);
+  const user = await requireRole(["instructor", "admin", "super_admin"]);
 
   const hasDatabase = Boolean(process.env.DATABASE_URL);
 
-  const courses = hasDatabase
-    ? [] // populated from DB when Neon is connected
-    : [
-        { id: "demo-1", title: "English for Beginners", lang: "en", isPublished: true, enrolled: 124, price: 0 },
-        { id: "demo-2", title: "Business English Intensive", lang: "en", isPublished: false, enrolled: 0, price: 1490 },
-      ];
+  type CourseRow = { id: string; title: string; lang: string; isPublished: boolean; enrolled: number; price: number };
+  let courses: CourseRow[] = [];
+
+  if (hasDatabase) {
+    try {
+      const { prisma } = await import("@/lib/db/prisma");
+      const isAdmin = ["admin", "super_admin"].includes(user.role as string);
+      const dbCourses = await prisma.course.findMany({
+        where: isAdmin ? {} : { instructorId: user.id },
+        orderBy: { createdAt: "desc" },
+        include: { _count: { select: { enrollments: true } } },
+      });
+      courses = dbCourses.map((c) => ({
+        id: c.id,
+        title: c.title,
+        lang: c.lang,
+        isPublished: c.isPublished,
+        enrolled: c._count.enrollments,
+        price: Number(c.price),
+      }));
+    } catch {
+      courses = [];
+    }
+  } else {
+    courses = DEMO_COURSES;
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto">

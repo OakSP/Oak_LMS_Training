@@ -43,9 +43,14 @@ export default function EditCoursePage() {
         if (res.ok) {
           const data = await res.json();
           const c = data.data ?? data;
+          // Normalize bilingual objects from mock data to plain strings
+          const toStr = (v: unknown) =>
+            typeof v === "string" ? v
+            : v && typeof v === "object" ? ((v as Record<string, string>).th ?? (v as Record<string, string>).en ?? "")
+            : "";
           setForm({
-            title: c.title ?? "",
-            description: c.description ?? "",
+            title: toStr(c.title),
+            description: toStr(c.description),
             lang: c.lang ?? "en",
             price: String(c.price ?? 0),
             isFree: c.isFree ?? c.is_free ?? false,

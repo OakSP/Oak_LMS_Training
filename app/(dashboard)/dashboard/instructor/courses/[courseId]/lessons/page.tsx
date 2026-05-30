@@ -23,7 +23,7 @@ import { CSS } from "@dnd-kit/utilities";
 interface Lesson {
   id: string;
   title: string;
-  type: "video" | "pdf" | "text" | "quiz";
+  type: "video" | "pdf" | "text" | "quiz" | "youtube";
   durationSec: number | null;
   isFree: boolean;
   position: number;
@@ -34,13 +34,25 @@ const TYPE_ICONS: Record<string, string> = {
   pdf: "📄",
   text: "📝",
   quiz: "✏️",
+  youtube: "▶",
 };
+
+function isValidYoutubeUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.hostname === "youtu.be" || u.hostname.includes("youtube.com");
+  } catch {
+    return false;
+  }
+}
 
 function SortableLesson({
   lesson,
+  courseId,
   onDelete,
 }: {
   lesson: Lesson;
+  courseId: string;
   onDelete: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -77,6 +89,14 @@ function SortableLesson({
           {lesson.isFree ? " · Free preview" : ""}
         </p>
       </div>
+      {lesson.type === "quiz" && (
+        <Link
+          href={`/dashboard/instructor/courses/${courseId}/lessons/${lesson.id}/quiz`}
+          className="opacity-0 group-hover:opacity-100 shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[color:var(--color-primary)] border border-[color:var(--color-primary)]/30 hover:bg-[color:var(--color-primary)]/10 transition-all"
+        >
+          Quiz
+        </Link>
+      )}
       <button
         onClick={() => onDelete(lesson.id)}
         className="opacity-0 group-hover:opacity-100 shrink-0 rounded-lg p-1.5 text-[color:var(--color-danger)] hover:bg-[color:var(--color-danger)]/10 transition-all"
@@ -94,7 +114,7 @@ export default function LessonBuilderPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [newLesson, setNewLesson] = useState({ title: "", type: "video" as Lesson["type"], isFree: false });
+  const [newLesson, setNewLesson] = useState({ title: "", type: "video" as Lesson["type"], isFree: false, youtubeUrl: "" });
   const [message, setMessage] = useState("");
 
   const sensors = useSensors(
@@ -153,19 +173,30 @@ export default function LessonBuilderPage() {
 
   async function addLesson() {
     if (!newLesson.title.trim()) return;
+    if (newLesson.type === "youtube" && !isValidYoutubeUrl(newLesson.youtubeUrl)) {
+      setMessage("กรุณากรอก YouTube URL ที่ถูกต้อง (เช่น https://youtube.com/watch?v=... หรือ https://youtu.be/...)");
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
+      const payload = {
+        title: newLesson.title,
+        type: newLesson.type,
+        isFree: newLesson.isFree,
+        position: lessons.length,
+        ...(newLesson.type === "youtube" && { contentUrl: newLesson.youtubeUrl }),
+      };
       const res = await fetch(`/api/courses/${courseId}/lessons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...newLesson, position: lessons.length }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok || data.data) {
-        const lesson = data.data ?? { id: `demo-${Date.now()}`, ...newLesson, durationSec: null, position: lessons.length };
+        const lesson = data.data ?? { id: `demo-${Date.now()}`, ...payload, durationSec: null };
         setLessons((prev) => [...prev, lesson]);
-        setNewLesson({ title: "", type: "video", isFree: false });
+        setNewLesson({ title: "", type: "video", isFree: false, youtubeUrl: "" });
         setShowForm(false);
       }
     } catch {
@@ -233,9 +264,10 @@ export default function LessonBuilderPage() {
             <select
               className="flex-1 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-card)] px-4 py-2.5 text-sm outline-none"
               value={newLesson.type}
-              onChange={(e) => setNewLesson((p) => ({ ...p, type: e.target.value as Lesson["type"] }))}
+              onChange={(e) => setNewLesson((p) => ({ ...p, type: e.target.value as Lesson["type"], youtubeUrl: "" }))}
             >
               <option value="video">Video</option>
+              <option value="youtube">YouTube</option>
               <option value="pdf">PDF</option>
               <option value="text">Text</option>
               <option value="quiz">Quiz</option>
@@ -250,10 +282,21 @@ export default function LessonBuilderPage() {
               Free preview
             </label>
           </div>
+          {newLesson.type === "youtube" && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-[color:var(--color-muted)]">YouTube URL</label>
+              <input
+                className="w-full rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-card)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--color-primary)] transition-colors"
+                placeholder="https://www.youtube.com/watch?v=... หรือ https://youtu.be/..."
+                value={newLesson.youtubeUrl}
+                onChange={(e) => setNewLesson((p) => ({ ...p, youtubeUrl: e.target.value }))}
+              />
+            </div>
+          )}
           <div className="flex gap-2">
             <button
               onClick={addLesson}
-              disabled={saving || !newLesson.title.trim()}
+              disabled={saving || !newLesson.title.trim() || (newLesson.type === "youtube" && !isValidYoutubeUrl(newLesson.youtubeUrl))}
               className="rounded-xl bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
               Add
@@ -281,7 +324,7 @@ export default function LessonBuilderPage() {
           <SortableContext items={lessons.map((l) => l.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2">
               {lessons.map((lesson) => (
-                <SortableLesson key={lesson.id} lesson={lesson} onDelete={deleteLesson} />
+                <SortableLesson key={lesson.id} lesson={lesson} courseId={courseId} onDelete={deleteLesson} />
               ))}
             </div>
           </SortableContext>

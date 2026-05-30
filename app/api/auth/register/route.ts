@@ -15,6 +15,15 @@ export async function POST(req: Request) {
     const { name, email, password } = schema.parse(body);
 
     if (!process.env.DATABASE_URL) {
+      const { setDemoUser, hasDemoUser } = await import("@/lib/auth/demo-store");
+
+      if (hasDemoUser(email)) {
+        return NextResponse.json({ error: "อีเมลนี้ถูกใช้งานแล้ว" }, { status: 409 });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+      setDemoUser({ id: `demo-${email}`, name, email, passwordHash, role: "student" });
+
       return NextResponse.json({
         id: `demo-${email}`,
         name,
