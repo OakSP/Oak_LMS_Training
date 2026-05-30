@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { LangProvider } from "@/components/providers/lang-provider";
 import { SessionProvider } from "@/components/providers/session-provider";
-import { ChatbotWidget } from "@/components/chatbot/chatbot-widget";
+
 
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ["latin", "latin-ext"],
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeProvider>
             <LangProvider>
               {children}
-              <ChatbotWidget />
+              {/* <ChatbotWidget /> — hidden, not released yet */}
             </LangProvider>
           </ThemeProvider>
         </SessionProvider>
