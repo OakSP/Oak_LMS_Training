@@ -15,7 +15,7 @@ const loginSchema = z.object({
   password: z.string().min(6),
 });
 
-const hasDatabase = Boolean(process.env.DATABASE_URL);
+const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
 const hasGoogle = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 
 // In-memory rate limiter — keyed by email (resets on server restart; use Redis in prod)

@@ -30,7 +30,7 @@ export default async function AdminReportsPage() {
         <p className="text-sm text-[color:var(--color-muted)] mt-1">Platform-wide metrics overview</p>
       </div>
 
-      {!Boolean(process.env.DATABASE_URL) && (
+      {!Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder") && (
         <div className="mb-6 rounded-xl border border-[color:var(--color-accent)]/30 bg-[color:var(--color-accent)]/5 p-4 text-sm text-[color:var(--color-accent)]">
           Demo mode — showing mock analytics. Connect Neon DB for real data.
         </div>

@@ -10,7 +10,7 @@ interface User {
 }
 
 async function fetchUsers(): Promise<User[]> {
-  const hasDatabase = Boolean(process.env.DATABASE_URL);
+  const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
   if (!hasDatabase) {
     return [
       { id: "1", name: "Oak Demo Student", email: "student@oak.local", role: "student", createdAt: new Date().toISOString() },
@@ -25,7 +25,7 @@ async function fetchUsers(): Promise<User[]> {
     orderBy: { createdAt: "desc" },
     take: 100,
   });
-  return users.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }));
+  return users.map((u: { id: string; name: string; email: string; role: string; createdAt: Date }) => ({ ...u, createdAt: u.createdAt.toISOString() }));
 }
 
 const ROLE_STYLES: Record<string, string> = {
@@ -49,7 +49,7 @@ export default async function AdminUsersPage() {
         </div>
       </div>
 
-      {!Boolean(process.env.DATABASE_URL) && (
+      {!Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder") && (
         <div className="mb-6 rounded-xl border border-[color:var(--color-accent)]/30 bg-[color:var(--color-accent)]/5 p-4 text-sm text-[color:var(--color-accent)]">
           Demo mode — showing mock users. Connect Neon DB for real data.
         </div>

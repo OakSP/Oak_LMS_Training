@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     const { token, password } = parsed.data;
-    const hasDatabase = Boolean(process.env.DATABASE_URL);
+    const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
 
     if (!hasDatabase) {
       return NextResponse.json({

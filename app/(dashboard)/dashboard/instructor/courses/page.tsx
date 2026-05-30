@@ -9,7 +9,7 @@ const DEMO_COURSES = [
 export default async function InstructorCoursesPage() {
   const user = await requireRole(["instructor", "admin", "super_admin"]);
 
-  const hasDatabase = Boolean(process.env.DATABASE_URL);
+  const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
 
   type CourseRow = { id: string; title: string; lang: string; isPublished: boolean; enrolled: number; price: number };
   let courses: CourseRow[] = [];

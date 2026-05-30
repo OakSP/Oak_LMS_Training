@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
     }
 
-    const hasDatabase = Boolean(process.env.DATABASE_URL);
+    const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
     if (!hasDatabase) {
       const demoQuiz = {
         id: `quiz-demo-${Date.now()}`,

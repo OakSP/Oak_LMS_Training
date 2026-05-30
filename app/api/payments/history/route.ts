@@ -5,7 +5,7 @@ export async function GET() {
   const { user, error } = await apiRequireAuth();
   if (error) return error;
 
-  const hasDatabase = Boolean(process.env.DATABASE_URL);
+  const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
 
   if (!hasDatabase) {
     return NextResponse.json({

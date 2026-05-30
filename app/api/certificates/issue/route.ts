@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "courseId is required" }, { status: 422 });
   }
 
-  const hasDatabase = Boolean(process.env.DATABASE_URL);
+  const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
 
   if (!hasDatabase) {
     const certNumber = generateCertNumber();

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const price = searchParams.get("price");
   const sort  = searchParams.get("sort");
 
-  const hasDatabase = Boolean(process.env.DATABASE_URL);
+  const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
 
   if (hasDatabase) {
     const { prisma } = await import("@/lib/db/prisma");
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
     }
 
-    const hasDatabase = Boolean(process.env.DATABASE_URL);
+    const hasDatabase = Boolean(process.env.DATABASE_URL) && !process.env.DATABASE_URL?.includes("placeholder");
     if (!hasDatabase) {
       return NextResponse.json({
         data: { id: `demo-${Date.now()}`, ...parsed.data, instructorId: user!.id },
